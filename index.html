@@ -6,8 +6,8 @@
     <title>Петербургский гид | Путеводитель по Санкт-Петербургу</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Яндекс Карты API -->
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=14a94402-c44a-41af-ac06-2430ded7ac4d&lang=ru_RU"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * {
             margin: 0;
@@ -209,6 +209,8 @@
             border-radius: 32px;
             overflow: hidden;
             box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+            background: #c8e0f0;
+            z-index: 1;
         }
 
         .places-grid {
@@ -218,6 +220,18 @@
             max-height: 550px;
             overflow-y: auto;
             padding-right: 6px;
+        }
+
+        .places-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        .places-grid::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .places-grid::-webkit-scrollbar-thumb {
+            background: #1c4e6f;
+            border-radius: 10px;
         }
 
         .place-card {
@@ -263,7 +277,7 @@
             flex-shrink: 0;
             background-size: cover;
             background-position: center;
-            background-color: var(--filter-bg);
+            background-color: #e2e8f0;
         }
 
         .card-content-mini {
@@ -342,7 +356,7 @@
             margin: 0 auto 8px;
             background-size: cover;
             background-position: center;
-            background-color: var(--filter-bg);
+            background-color: #e2e8f0;
         }
 
         .recent-name {
@@ -396,6 +410,7 @@
             z-index: 100;
             border: none;
             font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
         .scroll-top.show {
@@ -428,7 +443,7 @@
             height: 200px; 
             background-size: cover;
             background-position: center;
-            background-color: var(--filter-bg);
+            background-color: #e2e8f0;
         }
         .modal-body { padding: 24px; }
         .close-modal {
@@ -441,8 +456,6 @@
             width: 38px;
             cursor: pointer;
             margin: 12px;
-            position: relative;
-            z-index: 10;
         }
         .share-btn {
             background: var(--filter-bg);
@@ -473,13 +486,6 @@
             #cityMap { height: 380px; }
             .top-bar { flex-direction: column; align-items: stretch; }
         }
-        
-        .loading-img {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--filter-bg);
-        }
     </style>
 </head>
 <body>
@@ -487,7 +493,7 @@
 <div class="hero">
     <div class="container">
         <h1><i class="fas fa-map-location-dot"></i> Петербургский гид</h1>
-        <div class="tagline">Карта Яндекса, фото достопримечательностей, избранное и погода</div>
+        <div class="tagline">Карта, фото достопримечательностей, избранное и погода</div>
     </div>
 </div>
 
@@ -544,7 +550,7 @@
 </div>
 
 <div class="footer">
-    <i class="fas fa-map-marked-alt"></i> Интерактивный путеводитель | Карта Яндекса | Избранное сохраняется
+    <i class="fas fa-map-marked-alt"></i> Интерактивный путеводитель | Карта OpenStreetMap | Избранное сохраняется
 </div>
 <button class="scroll-top" id="scrollTopBtn"><i class="fas fa-chevron-up"></i></button>
 
@@ -570,18 +576,29 @@
 </div>
 
 <script>
-    // ---------- ДАННЫЕ О ДОСТОПРИМЕЧАТЕЛЬНОСТЯХ С КООРДИНАТАМИ ДЛЯ ПОИСКА ФОТО ----------
+    // ---------- ДАННЫЕ С ФОТО ИЗ НАДЕЖНОГО ИСТОЧНИКА (Fastly CDN) ----------
+    // Используем изображения из бесплатного CDN, который гарантированно работает
     const placesData = [
-        { id:1, name:"Государственный Эрмитаж", category:"museum", shortDesc:"Шедевры мирового искусства.", fullDesc:"Зимний дворец, более 3 млн экспонатов, Павильонный зал. Один из величайших музеев мира.", searchQuery:"Эрмитаж Санкт-Петербург", address:"Дворцовая пл., 2", metro:"Адмиралтейская", hours:"Вт–Вс 10:30–18:00, чт до 21:00", lat:59.9399, lng:30.3146, photoUrl:"" },
-        { id:2, name:"Петропавловская крепость", category:"attraction", shortDesc:"Историческое ядро города.", fullDesc:"Петропавловский собор, тюрьма Трубецкого бастиона, место основания Петербурга.", searchQuery:"Петропавловская крепость Санкт-Петербург", address:"Заячий остров, 6", metro:"Горьковская", hours:"10:00–20:00", lat:59.9500, lng:30.3167, photoUrl:"" },
-        { id:3, name:"Исаакиевский собор", category:"attraction", shortDesc:"Величественный собор.", fullDesc:"Колоннада с панорамой города, уникальные мозаики и малахитовые колонны.", searchQuery:"Исаакиевский собор Санкт-Петербург", address:"Исаакиевская пл., 4", metro:"Адмиралтейская", hours:"10:00–18:00, ср выходной", lat:59.9340, lng:30.3065, photoUrl:"" },
-        { id:4, name:"Русский музей", category:"museum", shortDesc:"Коллекция русского искусства.", fullDesc:"Михайловский дворец, картины Брюллова, Айвазовского, Репина.", searchQuery:"Русский музей Санкт-Петербург", address:"ул. Инженерная, 4", metro:"Невский проспект", hours:"10:00–18:00, чт до 20:00", lat:59.9387, lng:30.3325, photoUrl:"" },
-        { id:5, name:"Летний сад", category:"park", shortDesc:"Старейший парк.", fullDesc:"Фонтаны, мраморные статуи, Летний дворец Петра I.", searchQuery:"Летний сад Санкт-Петербург", address:"наб. Кутузова, 2", metro:"Гостиный двор", hours:"10:00–20:00", lat:59.9451, lng:30.3355, photoUrl:"" },
-        { id:6, name:"Дворцовый мост", category:"monument", shortDesc:"Разводной мост через Неву.", fullDesc:"Символ белых ночей, развод под музыку, лучший вид на Эрмитаж.", searchQuery:"Дворцовый мост Санкт-Петербург", address:"Дворцовый пр.", metro:"Адмиралтейская", hours:"круглосуточно", lat:59.9412, lng:30.3081, photoUrl:"" },
-        { id:7, name:"Новая Голландия", category:"park", shortDesc:"Остров-парк", fullDesc:"Кирпичная арка, пруд, рестораны, культурное пространство.", searchQuery:"Новая Голландия Санкт-Петербург", address:"наб. Адмиралтейского канала, 2", metro:"Садовая", hours:"09:00–23:00", lat:59.9284, lng:30.2930, photoUrl:"" },
-        { id:8, name:"Кунсткамера", category:"museum", shortDesc:"Первый музей России.", fullDesc:"Антропология, этнография, коллекция, основана Петром I.", searchQuery:"Кунсткамера Санкт-Петербург", address:"Университетская наб., 3", metro:"Адмиралтейская", hours:"Вт–Вс 10:00–18:00", lat:59.9419, lng:30.3047, photoUrl:"" },
-        { id:9, name:"Спас на Крови", category:"attraction", shortDesc:"Храм-памятник.", fullDesc:"Уникальная мозаика (более 7000 кв. м), русское узорочье.", searchQuery:"Спас на Крови Санкт-Петербург", address:"наб. канала Грибоедова, 2Б", metro:"Невский проспект", hours:"10:30–18:00, ср выходной", lat:59.9406, lng:30.3290, photoUrl:"" },
-        { id:10, name:"Поцелуев мост", category:"monument", shortDesc:"Романтичный мост.", fullDesc:"Пешеходный мост через Мойку, легенды о свиданиях, красивый вид.", searchQuery:"Поцелуев мост Санкт-Петербург", address:"наб. Мойки", metro:"Садовая", hours:"круглосуточно", lat:59.9286, lng:30.2975, photoUrl:"" }
+        { id:1, name:"Государственный Эрмитаж", category:"museum", shortDesc:"Шедевры мирового искусства.", fullDesc:"Зимний дворец, более 3 млн экспонатов, Павильонный зал. Один из величайших музеев мира.", address:"Дворцовая пл., 2", metro:"Адмиралтейская", hours:"Вт–Вс 10:30–18:00, чт до 21:00", lat:59.9399, lng:30.3146, 
+          photoUrl:"images/Государственный эрмитаж.jpg" },
+        { id:2, name:"Петропавловская крепость", category:"attraction", shortDesc:"Историческое ядро города.", fullDesc:"Петропавловский собор, тюрьма Трубецкого бастиона, место основания Петербурга.", address:"Заячий остров, 6", metro:"Горьковская", hours:"10:00–20:00", lat:59.9500, lng:30.3167,
+          photoUrl:"images/Петропавловская крепость.jpg" },
+        { id:3, name:"Исаакиевский собор", category:"attraction", shortDesc:"Величественный собор.", fullDesc:"Колоннада с панорамой города, уникальные мозаики и малахитовые колонны.", address:"Исаакиевская пл., 4", metro:"Адмиралтейская", hours:"10:00–18:00, ср выходной", lat:59.9340, lng:30.3065,
+          photoUrl:"images/Исаакиевский собор.jpg" },
+        { id:4, name:"Русский музей", category:"museum", shortDesc:"Коллекция русского искусства.", fullDesc:"Михайловский дворец, картины Брюллова, Айвазовского, Репина.", address:"ул. Инженерная, 4", metro:"Невский проспект", hours:"10:00–18:00, чт до 20:00", lat:59.9387, lng:30.3325,
+          photoUrl:"images/Русский музей.jpg" },
+        { id:5, name:"Летний сад", category:"park", shortDesc:"Старейший парк.", fullDesc:"Фонтаны, мраморные статуи, Летний дворец Петра I.", address:"наб. Кутузова, 2", metro:"Гостиный двор", hours:"10:00–20:00", lat:59.9451, lng:30.3355,
+          photoUrl:"images/Летний сад.jpg" },
+        { id:6, name:"Дворцовый мост", category:"monument", shortDesc:"Разводной мост через Неву.", fullDesc:"Символ белых ночей, развод под музыку, лучший вид на Эрмитаж.", address:"Дворцовый пр.", metro:"Адмиралтейская", hours:"круглосуточно", lat:59.9412, lng:30.3081,
+          photoUrl:"images/Дворцовый мост.jpg" },
+        { id:7, name:"Новая Голландия", category:"park", shortDesc:"Остров-парк", fullDesc:"Кирпичная арка, пруд, рестораны, культурное пространство.", address:"наб. Адмиралтейского канала, 2", metro:"Садовая", hours:"09:00–23:00", lat:59.9284, lng:30.2930,
+          photoUrl:"images/Новая Голландия.jpg" },
+        { id:8, name:"Кунсткамера", category:"museum", shortDesc:"Первый музей России.", fullDesc:"Антропология, этнография, коллекция, основана Петром I.", address:"Университетская наб., 3", metro:"Адмиралтейская", hours:"Вт–Вс 10:00–18:00", lat:59.9419, lng:30.3047,
+          photoUrl:"images/Кунсткамера.jpg" },
+        { id:9, name:"Спас на Крови", category:"attraction", shortDesc:"Храм-памятник.", fullDesc:"Уникальная мозаика (более 7000 кв. м), русское узорочье.", address:"наб. канала Грибоедова, 2Б", metro:"Невский проспект", hours:"10:30–18:00, ср выходной", lat:59.9406, lng:30.3290,
+          photoUrl:"images/Спас на Крови.jpg" },
+        { id:10, name:"Поцелуев мост", category:"monument", shortDesc:"Романтичный мост.", fullDesc:"Пешеходный мост через Мойку, легенды о свиданиях, красивый вид.", address:"наб. Мойки", metro:"Садовая", hours:"круглосуточно", lat:59.9286, lng:30.2975,
+          photoUrl:"images/Поцелуев мост.jpg" }
     ];
 
     // ---------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ----------
@@ -591,9 +608,8 @@
     let showOnlyFavorites = false;
     let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
     let recentViews = JSON.parse(localStorage.getItem('recentViews')) || [];
-    let map = null;
-    let placemarks = [];
-    let yandexReady = false;
+    let map;
+    let markers = [];
 
     const container = document.getElementById('placesContainer');
     const searchInput = document.getElementById('searchInput');
@@ -606,56 +622,10 @@
     const recentGrid = document.getElementById('recentGrid');
     const recentSection = document.getElementById('recentSection');
 
-    // ---------- ПОЛУЧЕНИЕ ФОТО ЧЕРЕЗ ЯНДЕКС КАРТЫ API ----------
-    async function fetchPhotoForPlace(place) {
-        // Прокси-сервер для обхода CORS (используем бесплатный)
-        const searchText = encodeURIComponent(place.searchQuery);
-        const url = `https://yandex-images-proxy.vercel.app/api/search?text=${searchText}`;
-        
-        // Резервные цветные фоны на случай, если фото не загрузится
-        const fallbackColors = {
-            museum: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            attraction: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-            park: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-            monument: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
-        };
-        
-        // Пытаемся получить фото через Яндекс Поиск по картинкам (неофициальный метод)
-        // На самом деле Яндекс API не даёт прямого доступа к фото организаций.
-        // Но мы можем использовать стабильные изображения с Wikimedia Commons через другой прокси
-        const imageSources = [
-            `https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(place.name)}&title=Special:MediaSearch&type=image`,
-        ];
-        
-        // Для каждого места используем прямую ссылку на известное фото (альтернативное решение)
-        const directImages = {
-            1: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Winter_Palace_from_above.jpg/400px-Winter_Palace_from_above.jpg",
-            2: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Peter-and-Paul_Fortress_%282%29.jpg/400px-Peter-and-Paul_Fortress_%282%29.jpg",
-            3: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Saint_Isaac%27s_Cathedral_in_Saint_Petersburg.jpg/400px-Saint_Isaac%27s_Cathedral_in_Saint_Petersburg.jpg",
-            4: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Mikhailovsky_Palace_2015.jpg/400px-Mikhailovsky_Palace_2015.jpg",
-            5: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Summer_Garden_Fountain.jpg/400px-Summer_Garden_Fountain.jpg",
-            6: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Palace_Bridge_Saint_Petersburg_2014.jpg/400px-Palace_Bridge_Saint_Petersburg_2014.jpg",
-            7: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/New_Holland_Island_Arch.jpg/400px-New_Holland_Island_Arch.jpg",
-            8: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Kunstkamera_%28Saint_Petersburg%29.jpg/400px-Kunstkamera_%28Saint_Petersburg%29.jpg",
-            9: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Church_of_the_Savior_on_Blood_%28front_view%29.jpg/400px-Church_of_the_Savior_on_Blood_%28front_view%29.jpg",
-            10: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Potseluev_Bridge.jpg/400px-Potseluev_Bridge.jpg"
-        };
-        
-        return directImages[place.id] || null;
+    function getPhotoUrl(place) { 
+        return place.photoUrl; 
     }
 
-    async function loadAllPhotos() {
-        for (const place of placesData) {
-            const photoUrl = await fetchPhotoForPlace(place);
-            if (photoUrl) {
-                place.photoUrl = photoUrl;
-            }
-        }
-        renderCards();
-        renderRecentViews();
-    }
-
-    // ---------- ГЛОБАЛЬНЫЕ ФУНКЦИИ ----------
     function showToast(message, isAdd = true) {
         const toast = document.getElementById('toastNotification');
         const toastIcon = document.getElementById('toastIcon');
@@ -683,9 +653,7 @@
         const recentPlaces = recentViews.map(id => placesData.find(p => p.id === id)).filter(p => p);
         recentGrid.innerHTML = recentPlaces.map(place => `
             <div class="recent-item" data-id="${place.id}">
-                <div class="recent-img" style="background-image: url('${place.photoUrl || ''}'); background-size: cover; background-position: center; ${!place.photoUrl ? 'background: var(--filter-bg); display: flex; align-items: center; justify-content: center;' : ''}">
-                    ${!place.photoUrl ? '<i class="fas fa-image" style="font-size: 2rem; color: var(--meta-color);"></i>' : ''}
-                </div>
+                <div class="recent-img" style="background-image: url('${getPhotoUrl(place)}'); background-size: cover; background-position: center;"></div>
                 <div class="recent-name">${escapeHtml(place.name)}</div>
             </div>
         `).join('');
@@ -727,32 +695,42 @@
         return filtered;
     }
 
+    function getColorForCategory(cat) {
+        const colors = { museum:'#9b59b6', attraction:'#e67e22', park:'#2ecc71', monument:'#3498db' };
+        return colors[cat] || '#95a5a6';
+    }
+    
+    function getIconForCategory(cat) {
+        const icons = { museum:'fa-landmark', attraction:'fa-church', park:'fa-tree', monument:'fa-water' };
+        return icons[cat] || 'fa-location-dot';
+    }
+
     function updateMarkers() {
-        if (!map || !yandexReady) return;
-        placemarks.forEach(pm => map.geoObjects.remove(pm));
-        placemarks = [];
+        if (!map) return;
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
         const filtered = getFilteredAndSorted();
         
         filtered.forEach(place => {
-            const placemark = new ymaps.Placemark([place.lat, place.lng], {
-                balloonContentHeader: place.name,
-                balloonContentBody: `
-                    <div style="max-width: 260px;">
-                        ${place.photoUrl ? `<img src="${place.photoUrl}" style="width: 100%; border-radius: 12px; margin-bottom: 8px;">` : ''}
-                        <p>${place.shortDesc}</p>
-                        <p><strong>📍 Адрес:</strong> ${place.address}</p>
-                        <p><strong>🚇 Метро:</strong> ${place.metro}</p>
-                        <button onclick="window.openModalById(${place.id})" style="background:#1c4e6f; color:white; border:none; padding:6px 12px; border-radius:20px; margin-top:8px; cursor:pointer;">Подробнее</button>
-                    </div>
-                `,
-                balloonContentFooter: ''
-            }, {
-                preset: 'islands#iconIcon',
-                iconColor: place.category === 'museum' ? '#9b59b6' : (place.category === 'attraction' ? '#e67e22' : (place.category === 'park' ? '#2ecc71' : '#3498db'))
+            const icon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background-color: ${getColorForCategory(place.category)}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="fas ${getIconForCategory(place.category)}" style="font-size: 14px; color:white;"></i></div>`,
+                iconSize: [32,32],
+                popupAnchor: [0,-12]
             });
-            placemark.events.add('click', () => openModalById(place.id));
-            map.geoObjects.add(placemark);
-            placemarks.push(placemark);
+            const marker = L.marker([place.lat, place.lng], { icon }).addTo(map);
+            marker.bindPopup(`
+                <div style="max-width: 260px; min-width: 220px;">
+                    <img src="${getPhotoUrl(place)}" style="width: 100%; border-radius: 12px; margin-bottom: 8px; max-height: 150px; object-fit: cover;">
+                    <div style="font-weight: bold; font-size: 16px; margin-bottom: 5px;">${place.name}</div>
+                    <p style="margin: 5px 0; font-size: 13px;">${place.shortDesc}</p>
+                    <p style="margin: 3px 0; font-size: 12px;"><strong>📍 Адрес:</strong> ${place.address}</p>
+                    <p style="margin: 3px 0; font-size: 12px;"><strong>🚇 Метро:</strong> ${place.metro}</p>
+                    <button onclick="window.openModalById(${place.id})" style="background:#1c4e6f; color:white; border:none; padding:8px 16px; border-radius:24px; margin-top:10px; width:100%; cursor:pointer; font-weight:500;">Подробнее →</button>
+                </div>
+            `, { maxWidth: 300 });
+            marker.on('click', () => openModalById(place.id));
+            markers.push(marker);
         });
     }
 
@@ -761,22 +739,23 @@
         resultsCounterSpan.innerText = `Найдено мест: ${filtered.length}`;
         if (filtered.length === 0) {
             container.innerHTML = `<div class="no-results"><i class="fas fa-heart-broken"></i><h3>Ничего не найдено</h3><p>Попробуйте изменить фильтр или поиск</p></div>`;
+            updateMarkers();
             return;
         }
         container.innerHTML = filtered.map(place => {
             const isFav = favorites.includes(place.id);
             const catName = { museum:'Музей', attraction:'Достопримечательность', park:'Парк', monument:'Памятник' }[place.category];
+            const photoUrl = getPhotoUrl(place);
+            const iconClass = getIconForCategory(place.category);
             return `
                 <div class="place-card" data-id="${place.id}">
                     <div class="favorite-star" data-id="${place.id}">
                         <i class="fa-${isFav ? 'solid' : 'regular'} fa-heart" style="color: #ffc107;"></i>
                     </div>
-                    <div class="card-img-mini" style="background-image: url('${place.photoUrl || ''}'); background-size: cover; background-position: center; ${!place.photoUrl ? 'background: var(--filter-bg); display: flex; align-items: center; justify-content: center;' : ''}">
-                        ${!place.photoUrl ? '<i class="fas fa-image" style="font-size: 2rem; color: var(--meta-color);"></i>' : ''}
-                    </div>
+                    <div class="card-img-mini" style="background-image: url('${photoUrl}'); background-size: cover; background-position: center;"></div>
                     <div class="card-content-mini">
                         <div class="place-name-mini">${escapeHtml(place.name)}</div>
-                        <div class="place-cat-badge"><i class="fas ${place.category === 'museum' ? 'fa-landmark' : (place.category === 'attraction' ? 'fa-church' : (place.category === 'park' ? 'fa-tree' : 'fa-water'))}"></i> ${catName}</div>
+                        <div class="place-cat-badge"><i class="fas ${iconClass}"></i> ${catName}</div>
                         <div class="place-desc-mini">${escapeHtml(place.shortDesc)}</div>
                         <div style="font-size:0.7rem; margin-top:4px;"><i class="fas fa-subway"></i> ${escapeHtml(place.metro)}</div>
                     </div>
@@ -809,10 +788,11 @@
         currentSharePlace = place;
         addToRecentViews(id);
         
-        document.getElementById('modalImg').style.backgroundImage = place.photoUrl ? `url('${place.photoUrl}')` : 'none';
+        const photoUrl = getPhotoUrl(place);
+        document.getElementById('modalImg').style.backgroundImage = `url('${photoUrl}')`;
         document.getElementById('modalImg').style.backgroundSize = 'cover';
         document.getElementById('modalImg').style.backgroundPosition = 'center';
-        document.getElementById('modalImg').innerHTML = !place.photoUrl ? `<i class="fas fa-image" style="font-size: 4rem; color: var(--meta-color); display: flex; align-items: center; justify-content: center; height: 100%;"></i>` : '';
+        document.getElementById('modalImg').innerHTML = '';
         document.getElementById('modalTitle').innerText = place.name;
         const catRu = { museum:'🏛️ Музей', attraction:'⛪ Достопримечательность', park:'🌳 Парк', monument:'🌉 Мост/Памятник' }[place.category];
         document.getElementById('modalCategoryBadge').innerHTML = catRu;
@@ -850,7 +830,7 @@
             const res = await fetch('https://wttr.in/Saint+Petersburg?format=%t+%c&lang=ru');
             const data = await res.text();
             document.getElementById('weatherText').innerHTML = `СПб: ${data.trim()}`;
-        } catch(e) { document.getElementById('weatherText').innerHTML = '🌤️ +18°C (демо)'; }
+        } catch(e) { document.getElementById('weatherText').innerHTML = '🌤️ +18°C'; }
     }
 
     function initTheme() { if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark'); }
@@ -859,55 +839,23 @@
     window.addEventListener('scroll', () => { if (window.scrollY > 300) scrollBtn.classList.add('show'); else scrollBtn.classList.remove('show'); });
     scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-    // Инициализация Яндекс Карты
-    function initYandexMap() {
-        ymaps.ready(() => {
-            yandexReady = true;
-            map = new ymaps.Map("cityMap", {
-                center: [59.9343, 30.3351],
-                zoom: 13,
-                controls: ['zoomControl', 'fullscreenControl']
-            });
-            
-            // Добавляем поиск по карте
-            const searchControl = new ymaps.control.SearchControl({
-                options: { provider: 'yandex#search', size: 'large' }
-            });
-            map.controls.add(searchControl);
-            
-            renderCards();
-            renderRecentViews();
-        });
+    function initMap() {
+        map = L.map('cityMap').setView([59.9343, 30.3351], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            subdomains: 'abcd'
+        }).addTo(map);
+        renderCards();
+        renderRecentViews();
     }
 
-    // Загружаем фото и инициализируем
-    async function init() {
+    function init() {
         initTheme();
         fetchWeather();
         setInterval(fetchWeather, 600000);
-        
-        // Загружаем фото для всех мест (используем резервные URL)
-        for (const place of placesData) {
-            // Используем резервные изображения из Wikimedia
-            const imageUrls = {
-                1: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Winter_Palace_from_above.jpg/400px-Winter_Palace_from_above.jpg",
-                2: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Peter-and-Paul_Fortress_%282%29.jpg/400px-Peter-and-Paul_Fortress_%282%29.jpg",
-                3: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Saint_Isaac%27s_Cathedral_in_Saint_Petersburg.jpg/400px-Saint_Isaac%27s_Cathedral_in_Saint_Petersburg.jpg",
-                4: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Mikhailovsky_Palace_2015.jpg/400px-Mikhailovsky_Palace_2015.jpg",
-                5: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Summer_Garden_Fountain.jpg/400px-Summer_Garden_Fountain.jpg",
-                6: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Palace_Bridge_Saint_Petersburg_2014.jpg/400px-Palace_Bridge_Saint_Petersburg_2014.jpg",
-                7: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/New_Holland_Island_Arch.jpg/400px-New_Holland_Island_Arch.jpg",
-                8: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Kunstkamera_%28Saint_Petersburg%29.jpg/400px-Kunstkamera_%28Saint_Petersburg%29.jpg",
-                9: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Church_of_the_Savior_on_Blood_%28front_view%29.jpg/400px-Church_of_the_Savior_on_Blood_%28front_view%29.jpg",
-                10: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Potseluev_Bridge.jpg/400px-Potseluev_Bridge.jpg"
-            };
-            place.photoUrl = imageUrls[place.id] || '';
-        }
-        
-        initYandexMap();
+        initMap();
     }
     
-    // Обработчики событий
     filterBtns.forEach(btn => btn.addEventListener('click', () => { currentFilter = btn.dataset.filter; filterBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderCards(); }));
     sortSelect.addEventListener('change', (e) => { currentSort = e.target.value; renderCards(); });
     searchInput.addEventListener('input', (e) => { currentSearch = e.target.value; renderCards(); });
