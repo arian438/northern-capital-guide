@@ -26,6 +26,8 @@
             --footer-bg: #eef2f8;
             --hero-gradient: linear-gradient(135deg, #0b2b40 0%, #1c4e6f 100%);
             --modal-badge: #eef2ff;
+            --toast-bg: #1e293b;
+            --toast-text: white;
         }
 
         body.dark {
@@ -39,6 +41,8 @@
             --footer-bg: #0f172a;
             --hero-gradient: linear-gradient(135deg, #0a1c2a 0%, #0f2c3f 100%);
             --modal-badge: #2d3a4e;
+            --toast-bg: #334155;
+            --toast-text: #eef2ff;
         }
 
         body {
@@ -314,6 +318,91 @@
             border-radius: 32px;
         }
 
+        /* Блок "Недавно просмотренные" */
+        .recent-section {
+            margin-top: 30px;
+            background: var(--card-bg);
+            border-radius: 28px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .recent-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recent-grid {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .recent-item {
+            flex-shrink: 0;
+            width: 120px;
+            background: var(--filter-bg);
+            border-radius: 20px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .recent-item:hover {
+            transform: translateY(-3px);
+            background: var(--modal-badge);
+        }
+
+        .recent-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            background-size: cover;
+            background-position: center;
+            margin: 0 auto 8px;
+        }
+
+        .recent-name {
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Toast уведомления */
+        .toast-notification {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--toast-bg);
+            color: var(--toast-text);
+            padding: 12px 24px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 3000;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .toast-notification.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
         /* Кнопка наверх */
         .scroll-top {
             position: fixed;
@@ -376,6 +465,22 @@
             width: 38px;
             cursor: pointer;
             margin: 12px;
+        }
+        .share-btn {
+            background: var(--filter-bg);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 15px;
+            width: 100%;
+            transition: 0.2s;
+            color: var(--text-primary);
+        }
+        .share-btn:hover {
+            background: #1c4e6f;
+            color: white;
         }
         .footer {
             text-align: center;
@@ -445,12 +550,28 @@
             <div id="placesContainer" class="places-grid"></div>
         </div>
     </div>
+
+    <!-- Блок "Недавно просмотренные" -->
+    <div class="recent-section" id="recentSection">
+        <div class="recent-title">
+            <i class="fas fa-history"></i> Недавно просмотренные
+        </div>
+        <div class="recent-grid" id="recentGrid">
+            <!-- Будут динамически добавлены элементы -->
+        </div>
+    </div>
 </div>
 
 <div class="footer">
     <i class="fas fa-map-marked-alt"></i> Интерактивный путеводитель | Избранное сохраняется в браузере
 </div>
 <button class="scroll-top" id="scrollTopBtn"><i class="fas fa-chevron-up"></i></button>
+
+<!-- Toast уведомление -->
+<div id="toastNotification" class="toast-notification">
+    <i class="fas fa-heart" id="toastIcon"></i>
+    <span id="toastMessage">Добавлено в избранное</span>
+</div>
 
 <div id="detailModal" class="modal">
     <div class="modal-content">
@@ -461,6 +582,9 @@
             <div id="modalCategoryBadge" style="background:var(--modal-badge); border-radius:30px; padding:4px 12px; display:inline-block;"></div>
             <p id="modalDesc" style="margin: 15px 0;"></p>
             <div id="modalMeta"></div>
+            <button id="shareModalBtn" class="share-btn">
+                <i class="fas fa-share-alt"></i> Поделиться местом
+            </button>
         </div>
     </div>
 </div>
@@ -468,16 +592,16 @@
 <script>
     // ---------- ДАННЫЕ С КООРДИНАТАМИ ----------
     const placesData = [
-        { id:1, name:"Государственный Эрмитаж", category:"museum", shortDesc:"Шедевры мирового искусства.", fullDesc:"Зимний дворец, более 3 млн экспонатов, Павильонный зал.", image:"https://images.unsplash.com/photo-1588530867975-2c799db3c04b?w=500&auto=format", address:"Дворцовая пл., 2", metro:"Адмиралтейская", hours:"Вт–Вс 10:30–18:00", lat:59.9399, lng:30.3146 },
-        { id:2, name:"Петропавловская крепость", category:"architecture", shortDesc:"Историческое ядро города.", fullDesc:"Петропавловский собор, тюрьма Трубецкого бастиона.", image:"https://images.pexels.com/photos/1616917/pexels-photo-1616917.jpeg?auto=compress&w=500", address:"Заячий остров, 6", metro:"Горьковская", hours:"10:00–20:00", lat:59.9500, lng:30.3167 },
-        { id:3, name:"Исаакиевский собор", category:"architecture", shortDesc:"Величественный собор.", fullDesc:"Колоннада с панорамой, мозаики.", image:"https://images.unsplash.com/photo-1564053489984-317bbd824c26?w=500", address:"Исаакиевская пл., 4", metro:"Адмиралтейская", hours:"10:00–18:00", lat:59.9340, lng:30.3065 },
-        { id:4, name:"Русский музей", category:"museum", shortDesc:"Коллекция русского искусства.", fullDesc:"Михайловский дворец, Брюллов, Айвазовский.", image:"https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500", address:"ул. Инженерная, 4", metro:"Невский проспект", hours:"10:00–18:00", lat:59.9387, lng:30.3325 },
-        { id:5, name:"Летний сад", category:"park", shortDesc:"Старейший парк.", fullDesc:"Фонтаны, мраморные статуи, Летний дворец.", image:"https://images.unsplash.com/photo-1590091084240-ddeb0e4fec6e?w=500", address:"наб. Кутузова, 2", metro:"Гостиный двор", hours:"10:00–20:00", lat:59.9451, lng:30.3355 },
-        { id:6, name:"Дворцовый мост", category:"bridge", shortDesc:"Разводной мост через Неву.", fullDesc:"Символ белых ночей, развод под музыку.", image:"https://images.unsplash.com/photo-1563620915-877a1934433c?w=500", address:"Дворцовый пр.", metro:"Адмиралтейская", hours:"круглосуточно", lat:59.9412, lng:30.3081 },
-        { id:7, name:"Новая Голландия", category:"park", shortDesc:"Остров-парк", fullDesc:"Кирпичная арка, пруд, рестораны.", image:"https://images.unsplash.com/photo-1606733240698-e9d8a62f047e?w=500", address:"наб. Адмиралтейского канала, 2", metro:"Садовая", hours:"09:00–23:00", lat:59.9284, lng:30.2930 },
-        { id:8, name:"Кунсткамера", category:"museum", shortDesc:"Первый музей России.", fullDesc:"Антропология, этнография, коллекция 'уродов'.", image:"https://images.unsplash.com/photo-1586730161901-617f9e2db993?w=500", address:"Университетская наб., 3", metro:"Адмиралтейская", hours:"Вт–Вс 10:00–18:00", lat:59.9419, lng:30.3047 },
-        { id:9, name:"Спас на Крови", category:"architecture", shortDesc:"Храм-памятник.", fullDesc:"Уникальная мозаика, русское узорочье.", image:"https://images.unsplash.com/photo-1591421336763-4bfbc372b327?w=500", address:"наб. канала Грибоедова, 2Б", metro:"Невский проспект", hours:"10:30–18:00", lat:59.9406, lng:30.3290 },
-        { id:10, name:"Поцелуев мост", category:"bridge", shortDesc:"Романтичный мост.", fullDesc:"Пешеходный мост через Мойку.", image:"https://images.unsplash.com/photo-1614671347865-1c68c06483fd?w=500", address:"наб. Мойки", metro:"Садовая", hours:"круглосуточно", lat:59.9286, lng:30.2975 }
+        { id:1, name:"Государственный Эрмитаж", category:"museum", shortDesc:"Шедевры мирового искусства.", fullDesc:"Зимний дворец, более 3 млн экспонатов, Павильонный зал. Один из величайших музеев мира.", image:"https://images.unsplash.com/photo-1588530867975-2c799db3c04b?w=500&auto=format", address:"Дворцовая пл., 2", metro:"Адмиралтейская", hours:"Вт–Вс 10:30–18:00", lat:59.9399, lng:30.3146 },
+        { id:2, name:"Петропавловская крепость", category:"architecture", shortDesc:"Историческое ядро города.", fullDesc:"Петропавловский собор, тюрьма Трубецкого бастиона, место основания Петербурга.", image:"https://images.pexels.com/photos/1616917/pexels-photo-1616917.jpeg?auto=compress&w=500", address:"Заячий остров, 6", metro:"Горьковская", hours:"10:00–20:00", lat:59.9500, lng:30.3167 },
+        { id:3, name:"Исаакиевский собор", category:"architecture", shortDesc:"Величественный собор.", fullDesc:"Колоннада с панорамой города, уникальные мозаики и малахитовые колонны.", image:"https://images.unsplash.com/photo-1564053489984-317bbd824c26?w=500", address:"Исаакиевская пл., 4", metro:"Адмиралтейская", hours:"10:00–18:00", lat:59.9340, lng:30.3065 },
+        { id:4, name:"Русский музей", category:"museum", shortDesc:"Коллекция русского искусства.", fullDesc:"Михайловский дворец, картины Брюллова, Айвазовского, Репина.", image:"https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500", address:"ул. Инженерная, 4", metro:"Невский проспект", hours:"10:00–18:00", lat:59.9387, lng:30.3325 },
+        { id:5, name:"Летний сад", category:"park", shortDesc:"Старейший парк.", fullDesc:"Фонтаны, мраморные статуи, Летний дворец Петра I.", image:"https://images.unsplash.com/photo-1590091084240-ddeb0e4fec6e?w=500", address:"наб. Кутузова, 2", metro:"Гостиный двор", hours:"10:00–20:00", lat:59.9451, lng:30.3355 },
+        { id:6, name:"Дворцовый мост", category:"bridge", shortDesc:"Разводной мост через Неву.", fullDesc:"Символ белых ночей, развод под музыку, лучший вид на Эрмитаж.", image:"https://images.unsplash.com/photo-1563620915-877a1934433c?w=500", address:"Дворцовый пр.", metro:"Адмиралтейская", hours:"круглосуточно", lat:59.9412, lng:30.3081 },
+        { id:7, name:"Новая Голландия", category:"park", shortDesc:"Остров-парк", fullDesc:"Кирпичная арка, пруд, рестораны, культурное пространство.", image:"https://images.unsplash.com/photo-1606733240698-e9d8a62f047e?w=500", address:"наб. Адмиралтейского канала, 2", metro:"Садовая", hours:"09:00–23:00", lat:59.9284, lng:30.2930 },
+        { id:8, name:"Кунсткамера", category:"museum", shortDesc:"Первый музей России.", fullDesc:"Антропология, этнография, коллекция 'уродов', основана Петром I.", image:"https://images.unsplash.com/photo-1586730161901-617f9e2db993?w=500", address:"Университетская наб., 3", metro:"Адмиралтейская", hours:"Вт–Вс 10:00–18:00", lat:59.9419, lng:30.3047 },
+        { id:9, name:"Спас на Крови", category:"architecture", shortDesc:"Храм-памятник.", fullDesc:"Уникальная мозаика (более 7000 кв. м), русское узорочье.", image:"https://images.unsplash.com/photo-1591421336763-4bfbc372b327?w=500", address:"наб. канала Грибоедова, 2Б", metro:"Невский проспект", hours:"10:30–18:00", lat:59.9406, lng:30.3290 },
+        { id:10, name:"Поцелуев мост", category:"bridge", shortDesc:"Романтичный мост.", fullDesc:"Пешеходный мост через Мойку, легенды о свиданиях, красивый вид.", image:"https://images.unsplash.com/photo-1614671347865-1c68c06483fd?w=500", address:"наб. Мойки", metro:"Садовая", hours:"круглосуточно", lat:59.9286, lng:30.2975 }
     ];
 
     // ---------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ----------
@@ -486,6 +610,7 @@
     let currentSort = 'default';
     let showOnlyFavorites = false;
     let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+    let recentViews = JSON.parse(localStorage.getItem('recentViews')) || [];
     let map, markersLayer = [];
 
     // DOM элементы
@@ -497,21 +622,77 @@
     const themeToggle = document.getElementById('themeToggleBtn');
     const resultsCounterSpan = document.getElementById('resultsCounter');
     const scrollBtn = document.getElementById('scrollTopBtn');
+    const recentGrid = document.getElementById('recentGrid');
+    const recentSection = document.getElementById('recentSection');
 
-    // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------
+    // ---------- TOAST УВЕДОМЛЕНИЯ ----------
+    function showToast(message, isAdd = true) {
+        const toast = document.getElementById('toastNotification');
+        const toastIcon = document.getElementById('toastIcon');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        toastIcon.className = isAdd ? 'fas fa-heart' : 'fas fa-heart-broken';
+        toastIcon.style.color = '#ffc107';
+        toastMessage.textContent = message;
+        
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+
+    // ---------- ИСТОРИЯ ПРОСМОТРОВ ----------
+    function addToRecentViews(placeId) {
+        // Удаляем если уже есть
+        recentViews = recentViews.filter(id => id !== placeId);
+        // Добавляем в начало
+        recentViews.unshift(placeId);
+        // Оставляем только последние 5
+        if (recentViews.length > 5) recentViews.pop();
+        localStorage.setItem('recentViews', JSON.stringify(recentViews));
+        renderRecentViews();
+    }
+
+    function renderRecentViews() {
+        if (recentViews.length === 0) {
+            recentSection.style.display = 'none';
+            return;
+        }
+        recentSection.style.display = 'block';
+        const recentPlaces = recentViews.map(id => placesData.find(p => p.id === id)).filter(p => p);
+        
+        recentGrid.innerHTML = recentPlaces.map(place => `
+            <div class="recent-item" data-id="${place.id}">
+                <div class="recent-img" style="background-image: url('${place.image}');"></div>
+                <div class="recent-name">${escapeHtml(place.name)}</div>
+            </div>
+        `).join('');
+        
+        document.querySelectorAll('.recent-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const id = parseInt(item.getAttribute('data-id'));
+                openModalById(id);
+            });
+        });
+    }
+
+    // ---------- ПОБОЧНЫЕ ФУНКЦИИ ----------
     function saveFavorites() {
         localStorage.setItem('favorites', JSON.stringify(favorites));
     }
 
     function toggleFavorite(id, event) {
         event.stopPropagation();
+        let isAdd = false;
         if (favorites.includes(id)) {
             favorites = favorites.filter(fid => fid !== id);
+            showToast(`🗑️ Удалено из избранного`, false);
         } else {
             favorites.push(id);
+            showToast(`❤️ Добавлено в избранное!`, true);
         }
         saveFavorites();
-        renderCards();  // обновить список и маркеры
+        renderCards();
     }
 
     // Получение отфильтрованных и отсортированных данных
@@ -525,7 +706,6 @@
             }
             return true;
         });
-        // Сортировка
         if (currentSort === 'name') {
             filtered.sort((a,b) => a.name.localeCompare(b.name));
         } else if (currentSort === 'nameDesc') {
@@ -538,6 +718,7 @@
 
     // Обновление маркеров на карте
     function updateMarkers() {
+        if (!map) return;
         markersLayer.forEach(m => map.removeLayer(m));
         markersLayer = [];
         const filtered = getFilteredAndSorted();
@@ -549,7 +730,7 @@
                 popupAnchor: [0,-12]
             });
             const marker = L.marker([place.lat, place.lng], { icon }).addTo(map);
-            marker.bindPopup(`<b>${place.name}</b><br>${place.shortDesc}<br><button onclick="window.openModalById(${place.id})" style="background:#1c4e6f; color:white; border:none; padding:4px 12px; border-radius:20px; margin-top:6px;">Подробнее</button>`);
+            marker.bindPopup(`<b>${place.name}</b><br>${place.shortDesc}<br><button onclick="window.openModalById(${place.id})" style="background:#1c4e6f; color:white; border:none; padding:4px 12px; border-radius:20px; margin-top:6px; cursor:pointer;">Подробнее</button>`);
             marker.on('click', () => openModalById(place.id));
             markersLayer.push(marker);
         });
@@ -564,7 +745,7 @@
         return icons[cat] || 'fa-location-dot';
     }
 
-    // Рендер карточек + обновление маркеров + счётчик
+    // Рендер карточек
     function renderCards() {
         const filtered = getFilteredAndSorted();
         resultsCounterSpan.innerText = `Найдено мест: ${filtered.length}`;
@@ -594,7 +775,6 @@
             `;
         }).join('');
 
-        // Привязываем обработчики для звёздочек и карточек
         document.querySelectorAll('.favorite-star').forEach(star => {
             star.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -612,10 +792,17 @@
         updateMarkers();
     }
 
-    // Модальное окно
+    // Модальное окно с историей и шарингом
+    let currentSharePlace = null;
+    
     function openModalById(id) {
         const place = placesData.find(p => p.id === id);
         if (!place) return;
+        currentSharePlace = place;
+        
+        // Добавляем в историю просмотров
+        addToRecentViews(id);
+        
         document.getElementById('modalImg').style.backgroundImage = `url('${place.image}')`;
         document.getElementById('modalTitle').innerText = place.name;
         const catRu = { museum:'🏛️ Музей', architecture:'⛪ Архитектура', park:'🌳 Парк', bridge:'🌉 Мост' }[place.category];
@@ -631,16 +818,42 @@
     }
     window.openModalById = openModalById;
 
+    // Функция "Поделиться"
+    async function shareCurrentPlace() {
+        if (!currentSharePlace) return;
+        const shareText = `${currentSharePlace.name} — ${currentSharePlace.shortDesc}\n📍 Адрес: ${currentSharePlace.address}\n🚇 Метро: ${currentSharePlace.metro}\n\nПутеводитель по Петербургу: ${window.location.href}`;
+        
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: currentSharePlace.name,
+                    text: currentSharePlace.shortDesc,
+                    url: window.location.href
+                });
+            } catch(e) {
+                // Пользователь отменил шаринг
+            }
+        } else {
+            // Фолбэк: копируем в буфер обмена
+            try {
+                await navigator.clipboard.writeText(shareText);
+                showToast(`📋 Ссылка на "${currentSharePlace.name}" скопирована!`, true);
+            } catch(err) {
+                alert('Не удалось скопировать ссылку');
+            }
+        }
+    }
+
     function closeModal() {
         document.getElementById('detailModal').classList.remove('active');
         document.body.style.overflow = '';
+        currentSharePlace = null;
     }
 
     function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])) || ''; }
 
-    // ---------- ПОГОДА (OpenWeatherMap free mock - реальный API требует ключ, показываем демо) ----------
+    // ---------- ПОГОДА ----------
     async function fetchWeather() {
-        // Для демонстрации используем открытый API wttr.in (без ключа) - показывает погоду в Питере
         try {
             const res = await fetch('https://wttr.in/Saint+Petersburg?format=%t+%c&lang=ru');
             const data = await res.text();
@@ -677,6 +890,7 @@
             subdomains: 'abcd'
         }).addTo(map);
         renderCards();
+        renderRecentViews();
     }
 
     // Обработчики событий
@@ -708,13 +922,14 @@
 
     themeToggle.addEventListener('click', toggleTheme);
     document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('shareModalBtn').addEventListener('click', shareCurrentPlace);
     document.getElementById('detailModal').addEventListener('click', (e) => { if(e.target === document.getElementById('detailModal')) closeModal(); });
     document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
 
     // Запуск
     initTheme();
     fetchWeather();
-    setInterval(fetchWeather, 600000); // каждые 10 минут
+    setInterval(fetchWeather, 600000);
     initMap();
 </script>
 </body>
