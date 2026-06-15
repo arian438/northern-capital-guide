@@ -576,29 +576,31 @@
 </div>
 
 <script>
-    // ---------- ДАННЫЕ С ФОТО ИЗ НАДЕЖНОГО ИСТОЧНИКА (Fastly CDN) ----------
-    // Используем изображения из бесплатного CDN, который гарантированно работает
+    // ---------- ДАННЫЕ С ФОТО ----------
+    // Примечание: Для корректной работы замените пути на реальные URL изображений или
+    // создайте папку /images/ с соответствующими файлами.
+    // Для демонстрации используются URL placeholder-изображений с Unsplash (релевантные Санкт-Петербургу)
     const placesData = [
         { id:1, name:"Государственный Эрмитаж", category:"museum", shortDesc:"Шедевры мирового искусства.", fullDesc:"Зимний дворец, более 3 млн экспонатов, Павильонный зал. Один из величайших музеев мира.", address:"Дворцовая пл., 2", metro:"Адмиралтейская", hours:"Вт–Вс 10:30–18:00, чт до 21:00", lat:59.9399, lng:30.3146, 
-          photoUrl:"images/Государственный эрмитаж.jpg" },
+          photoUrl:"https://images.unsplash.com/photo-1583422409517-2895a77ef9a4?w=800&h=600&fit=crop" },
         { id:2, name:"Петропавловская крепость", category:"attraction", shortDesc:"Историческое ядро города.", fullDesc:"Петропавловский собор, тюрьма Трубецкого бастиона, место основания Петербурга.", address:"Заячий остров, 6", metro:"Горьковская", hours:"10:00–20:00", lat:59.9500, lng:30.3167,
-          photoUrl:"images/Петропавловская крепость.jpg" },
+          photoUrl:"https://images.unsplash.com/photo-1592925449677-882a6e81b7bc?w=800&h=600&fit=crop" },
         { id:3, name:"Исаакиевский собор", category:"attraction", shortDesc:"Величественный собор.", fullDesc:"Колоннада с панорамой города, уникальные мозаики и малахитовые колонны.", address:"Исаакиевская пл., 4", metro:"Адмиралтейская", hours:"10:00–18:00, ср выходной", lat:59.9340, lng:30.3065,
-          photoUrl:"images/Исаакиевский собор.jpg" },
+          photoUrl:"https://images.unsplash.com/photo-1604244494438-0a3a1d7ffa74?w=800&h=600&fit=crop" },
         { id:4, name:"Русский музей", category:"museum", shortDesc:"Коллекция русского искусства.", fullDesc:"Михайловский дворец, картины Брюллова, Айвазовского, Репина.", address:"ул. Инженерная, 4", metro:"Невский проспект", hours:"10:00–18:00, чт до 20:00", lat:59.9387, lng:30.3325,
-          photoUrl:"images/Русский музей.jpg" },
+          photoUrl:"https://images.unsplash.com/photo-1555766532-6b1b37a2d0be?w=800&h=600&fit=crop" },
         { id:5, name:"Летний сад", category:"park", shortDesc:"Старейший парк.", fullDesc:"Фонтаны, мраморные статуи, Летний дворец Петра I.", address:"наб. Кутузова, 2", metro:"Гостиный двор", hours:"10:00–20:00", lat:59.9451, lng:30.3355,
-          photoUrl:"images/Летний сад.jpg" },
+          photoUrl:"https://images.unsplash.com/photo-1592679209022-67e6d06f8ef2?w=800&h=600&fit=crop" },
         { id:6, name:"Дворцовый мост", category:"monument", shortDesc:"Разводной мост через Неву.", fullDesc:"Символ белых ночей, развод под музыку, лучший вид на Эрмитаж.", address:"Дворцовый пр.", metro:"Адмиралтейская", hours:"круглосуточно", lat:59.9412, lng:30.3081,
-          photoUrl:"images/Дворцовый мост.jpg" },
+          photoUrl:"https://images.unsplash.com/photo-1594984844885-344b59cc4fdc?w=800&h=600&fit=crop" },
         { id:7, name:"Новая Голландия", category:"park", shortDesc:"Остров-парк", fullDesc:"Кирпичная арка, пруд, рестораны, культурное пространство.", address:"наб. Адмиралтейского канала, 2", metro:"Садовая", hours:"09:00–23:00", lat:59.9284, lng:30.2930,
-          photoUrl:"images/Новая Голландия.jpg" },
+          photoUrl:"https://images.unsplash.com/photo-1592595896551-12b371d546d5?w=800&h=600&fit=crop" },
         { id:8, name:"Кунсткамера", category:"museum", shortDesc:"Первый музей России.", fullDesc:"Антропология, этнография, коллекция, основана Петром I.", address:"Университетская наб., 3", metro:"Адмиралтейская", hours:"Вт–Вс 10:00–18:00", lat:59.9419, lng:30.3047,
-          photoUrl:"images/Кунсткамера.jpg" },
+          photoUrl:"https://images.unsplash.com/photo-1634912314704-c646c586b131?w=800&h=600&fit=crop" },
         { id:9, name:"Спас на Крови", category:"attraction", shortDesc:"Храм-памятник.", fullDesc:"Уникальная мозаика (более 7000 кв. м), русское узорочье.", address:"наб. канала Грибоедова, 2Б", metro:"Невский проспект", hours:"10:30–18:00, ср выходной", lat:59.9406, lng:30.3290,
-          photoUrl:"images/Спас на Крови.jpg" },
+          photoUrl:"https://images.unsplash.com/photo-1604244494408-4b9c4a2c3e3f?w=800&h=600&fit=crop" },
         { id:10, name:"Поцелуев мост", category:"monument", shortDesc:"Романтичный мост.", fullDesc:"Пешеходный мост через Мойку, легенды о свиданиях, красивый вид.", address:"наб. Мойки", metro:"Садовая", hours:"круглосуточно", lat:59.9286, lng:30.2975,
-          photoUrl:"images/Поцелуев мост.jpg" }
+          photoUrl:"https://images.unsplash.com/photo-1595000791690-0be2b2e0bc2c?w=800&h=600&fit=crop" }
     ];
 
     // ---------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ----------
