@@ -21,3 +21,5 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+
+echo "app/backend/.env" >> .gitignore
