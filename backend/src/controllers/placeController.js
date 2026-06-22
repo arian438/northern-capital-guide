@@ -1,6 +1,7 @@
 const Place = require('../models/Place');
 const Favorite = require('../models/Favorite');
 const RecentView = require('../models/RecentView');
+const { mapPlaceToClient, mapPlacesToClient } = require('../utils/placeMapper');
 const { query, logger } = require('../config/database');
 
 exports.getPlaces = async (req, res) => {
@@ -26,7 +27,7 @@ exports.getPlaces = async (req, res) => {
 
         res.json({
             success: true,
-            data: places,
+            data: mapPlacesToClient(places),
             pagination: {
                 limit: filters.limit,
                 offset: filters.offset,
@@ -78,11 +79,11 @@ exports.getPlaceById = async (req, res) => {
 
         res.json({
             success: true,
-            data: {
+            data: mapPlaceToClient({
                 ...place,
                 isFavorite,
                 reviews: reviews.rows
-            }
+            })
         });
     } catch (error) {
         logger.error('Get place by id error:', error);
@@ -223,7 +224,7 @@ exports.getNearbyPlaces = async (req, res) => {
 
         res.json({
             success: true,
-            data: places
+            data: mapPlacesToClient(places)
         });
     } catch (error) {
         logger.error('Get nearby places error:', error);

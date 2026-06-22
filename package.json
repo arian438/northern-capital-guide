@@ -1,0 +1,12 @@
+{
+  "name": "northern-capital-guide",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Петербургский гид — путеводитель по Санкт-Петербургу",
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "dev": "npm --prefix backend run dev",
+    "db:check": "npm --prefix backend run db:check",
+    "db:setup": "npm --prefix backend run db:setup"
+  }
+}

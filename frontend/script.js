@@ -1,25 +1,5 @@
-const placesData = [
-        { id:1, name:"Государственный Эрмитаж", category:"museum", shortDesc:"Шедевры мирового искусства.", fullDesc:"Зимний дворец, более 3 млн экспонатов, Павильонный зал. Один из величайших музеев мира.", address:"Дворцовая пл., 2", metro:"Адмиралтейская", hours:"Вт–Вс 10:30–18:00, чт до 21:00", lat:59.9399, lng:30.3146, 
-          photoUrl:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Winter_Palace_Panorama_4.jpg/330px-Winter_Palace_Panorama_4.jpg" },
-        { id:2, name:"Петропавловская крепость", category:"attraction", shortDesc:"Историческое ядро города.", fullDesc:"Петропавловский собор, тюрьма Трубецкого бастиона, место основания Петербурга.", address:"Заячий остров, 6", metro:"Горьковская", hours:"10:00–20:00", lat:59.9500, lng:30.3167,
-          photoUrl:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/RUS-2016-Aerial-SPB-Peter_and_Paul_Fortress_02.jpg/330px-RUS-2016-Aerial-SPB-Peter_and_Paul_Fortress_02.jpg" },
-        { id:3, name:"Исаакиевский собор", category:"attraction", shortDesc:"Величественный собор.", fullDesc:"Колоннада с панорамой города, уникальные мозаики и малахитовые колонны.", address:"Исаакиевская пл., 4", metro:"Адмиралтейская", hours:"10:00–18:00, ср выходной", lat:59.9340, lng:30.3065,
-          photoUrl:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Saint_Isaac%27s_Cathedral_in_SPB.jpeg/330px-Saint_Isaac%27s_Cathedral_in_SPB.jpeg" },
-        { id:4, name:"Русский музей", category:"museum", shortDesc:"Коллекция русского искусства.", fullDesc:"Михайловский дворец, картины Брюллова, Айвазовского, Репина.", address:"ул. Инженерная, 4", metro:"Невский проспект", hours:"10:00–18:00, чт до 20:00", lat:59.9387, lng:30.3325,
-          photoUrl:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Spb_06-2012_MichaelPalace.jpg/330px-Spb_06-2012_MichaelPalace.jpg" },
-        { id:5, name:"Летний сад", category:"park", shortDesc:"Старейший парк.", fullDesc:"Фонтаны, мраморные статуи, Летний дворец Петра I.", address:"наб. Кутузова, 2", metro:"Гостиный двор", hours:"10:00–20:00", lat:59.9451, lng:30.3355,
-          photoUrl:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Вход_в_Летний_сад.jpg/330px-Вход_в_Летний_сад.jpg" },
-        { id:6, name:"Дворцовый мост", category:"monument", shortDesc:"Разводной мост через Неву.", fullDesc:"Символ белых ночей, развод под музыку, лучший вид на Эрмитаж.", address:"Дворцовый пр.", metro:"Адмиралтейская", hours:"круглосуточно", lat:59.9412, lng:30.3081,
-          photoUrl:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Palace_Bridge_SPB_%28img2%29.jpg/330px-Palace_Bridge_SPB_%28img2%29.jpg" },
-        { id:7, name:"Новая Голландия", category:"park", shortDesc:"Остров-парк", fullDesc:"Кирпичная арка, пруд, рестораны, культурное пространство.", address:"наб. Адмиралтейского канала, 2", metro:"Садовая", hours:"09:00–23:00", lat:59.9284, lng:30.2930,
-          photoUrl:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Spb_06-2017_img33_New_Holland.jpg/330px-Spb_06-2017_img33_New_Holland.jpg" },
-        { id:8, name:"Кунсткамера", category:"museum", shortDesc:"Первый музей России.", fullDesc:"Антропология, этнография, коллекция, основана Петром I.", address:"Университетская наб., 3", metro:"Адмиралтейская", hours:"Вт–Вс 10:00–18:00", lat:59.9419, lng:30.3047,
-          photoUrl:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Saint_Petersburg_Kunstkamera_from_Neva.jpg/330px-Saint_Petersburg_Kunstkamera_from_Neva.jpg" },
-        { id:9, name:"Спас на Крови", category:"attraction", shortDesc:"Храм-памятник.", fullDesc:"Уникальная мозаика (более 7000 кв. м), русское узорочье.", address:"наб. канала Грибоедова, 2Б", metro:"Невский проспект", hours:"10:30–18:00, ср выходной", lat:59.9406, lng:30.3290,
-          photoUrl:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Собор_Воскресения_Христова_1.jpg/330px-Собор_Воскресения_Христова_1.jpg" },
-        { id:10, name:"Поцелуев мост", category:"monument", shortDesc:"Романтичный мост.", fullDesc:"Пешеходный мост через Мойку, легенды о свиданиях, красивый вид.", address:"наб. Мойки", metro:"Садовая", hours:"круглосуточно", lat:59.9286, lng:30.2975,
-          photoUrl:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/PoceluevMost_29613.jpg/330px-PoceluevMost_29613.jpg" }
-    ];
+    const API_BASE = window.API_BASE_URL || '/api';
+    let placesData = [];
 
     let currentFilter = 'all';
     let currentSearch = '';
@@ -42,7 +22,22 @@ const placesData = [
     const recentSection = document.getElementById('recentSection');
 
     function getPhotoUrl(place) { 
-        return place.photoUrl; 
+        return place.photoUrl || ''; 
+    }
+
+    async function loadPlaces() {
+        container.innerHTML = `<div class="no-results"><i class="fas fa-spinner fa-spin"></i><h3>Загрузка мест...</h3></div>`;
+        const response = await fetch(`${API_BASE}/places?limit=100`);
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || 'Не удалось загрузить данные');
+        }
+        placesData = result.data;
+    }
+
+    function showLoadError(message) {
+        container.innerHTML = `<div class="no-results"><i class="fas fa-exclamation-triangle"></i><h3>Ошибка загрузки</h3><p>${escapeHtml(message)}</p><p>Убедитесь, что сервер запущен: <code>npm start</code> в папке backend</p></div>`;
+        resultsCounterSpan.innerText = 'Найдено мест: 0';
     }
 
     function showToast(message, isAdd = true) {
@@ -268,11 +263,17 @@ const placesData = [
         renderRecentViews();
     }
 
-    function init() {
+    async function init() {
         initTheme();
         fetchWeather();
         setInterval(fetchWeather, 600000);
-        initMap();
+        try {
+            await loadPlaces();
+            initMap();
+        } catch (error) {
+            console.error('Load places error:', error);
+            showLoadError(error.message);
+        }
     }
     
     filterBtns.forEach(btn => btn.addEventListener('click', () => { currentFilter = btn.dataset.filter; filterBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderCards(); }));

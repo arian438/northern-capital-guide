@@ -1,6 +1,6 @@
-const User = require('../models/User');
-const { generateToken, generateRefreshToken } = require('../config/auth');
-const { logger } = require('../config/database');
+const User = require('./models/User');
+const { generateToken, generateRefreshToken } = require('./config/auth');
+const { logger } = require('./config/database');
 const crypto = require('crypto');
 
 exports.register = async (req, res) => {
@@ -149,7 +149,7 @@ exports.refreshToken = async (req, res) => {
         }
 
         // Проверка refresh token
-        const decoded = require('../config/auth').verifyRefreshToken(refreshToken);
+        const decoded = require('./config/auth').verifyRefreshToken(refreshToken);
         if (!decoded) {
             return res.status(401).json({
                 success: false,
@@ -158,7 +158,7 @@ exports.refreshToken = async (req, res) => {
         }
 
         // Проверка существования сессии
-        const sessionResult = await require('../config/database').query(
+        const sessionResult = await require('./config/database').query(
             'SELECT * FROM sessions WHERE refresh_token = $1 AND revoked_at IS NULL',
             [refreshToken]
         );
@@ -193,7 +193,7 @@ exports.refreshToken = async (req, res) => {
         const newRefreshToken = generateRefreshToken(user.id);
 
         // Обновление сессии
-        await require('../config/database').query(
+        await require('./config/database').query(
             `UPDATE sessions 
              SET session_token = $1, refresh_token = $2, expires_at = $3
              WHERE refresh_token = $4`,
@@ -364,7 +364,7 @@ exports.forgotPassword = async (req, res) => {
         const token = crypto.randomBytes(32).toString('hex');
         const expiresAt = new Date(Date.now() + 3600000); // 1 час
 
-        await require('../config/database').query(
+        await require('./config/database').query(
             `INSERT INTO password_reset_tokens (user_id, token, expires_at)
              VALUES ($1, $2, $3)
              ON CONFLICT (user_id) DO UPDATE 
@@ -397,7 +397,7 @@ exports.resetPassword = async (req, res) => {
     try {
         const { token, newPassword } = req.body;
 
-        const result = await require('../config/database').query(
+        const result = await require('./config/database').query(
             `SELECT * FROM password_reset_tokens 
              WHERE token = $1 AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP`,
             [token]
@@ -416,7 +416,7 @@ exports.resetPassword = async (req, res) => {
         await User.update(resetToken.user_id, { password: newPassword });
 
         // Отметка токена как использованного
-        await require('../config/database').query(
+        await require('./config/database').query(
             'UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1',
             [resetToken.id]
         );
