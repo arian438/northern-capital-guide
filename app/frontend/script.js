@@ -21,7 +21,6 @@ const placesData = [
           photoUrl:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/PoceluevMost_29613.jpg/330px-PoceluevMost_29613.jpg" }
     ];
 
-    // ---------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ----------
     let currentFilter = 'all';
     let currentSearch = '';
     let currentSort = 'default';
