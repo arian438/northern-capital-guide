@@ -19,7 +19,6 @@ const server = app.listen(PORT, () => {
     logger.info(`Frontend URL: ${process.env.FRONTEND_URL}`);
 });
 
-// Graceful shutdown
 const shutdown = async () => {
     logger.info('Shutting down gracefully...');
     
