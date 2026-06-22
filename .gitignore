@@ -1,1 +1,23 @@
+# Системные файлы
+.DS_Store
+Thumbs.db
 
+# Файлы редакторов и IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Временные файлы
+*.tmp
+*.temp
+
+# Логи
+*.log
+
+# Файлы окружения
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
