@@ -10,7 +10,8 @@
     "start": "npm --prefix backend start",
     "dev": "npm --prefix backend run dev",
     "db:check": "npm --prefix backend run db:check",
-    "db:setup": "npm --prefix backend run db:setup"
+    "db:setup": "npm --prefix backend run db:setup",
+    "db:push-cloud": "npm --prefix backend run db:push-cloud"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

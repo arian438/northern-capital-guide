@@ -10,7 +10,9 @@
     "dev": "nodemon server.js",
     "migrate": "node src/migrations/run.js",
     "db:setup": "node scripts/init-db.js",
-    "db:check": "node scripts/check-db.js"
+    "db:check": "node scripts/check-db.js",
+    "db:export": "node scripts/export-places.js",
+    "db:push-cloud": "node scripts/push-to-cloud.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
