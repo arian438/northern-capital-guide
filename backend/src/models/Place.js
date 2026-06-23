@@ -1,67 +1,79 @@
 const { query } = require('../config/database');
+const { withPlacesFallback, fallback } = require('../utils/placesData');
 
 class Place {
     static async findAll(filters = {}) {
-        let conditions = [];
-        let values = [];
-        let paramCount = 1;
+        return withPlacesFallback(async () => {
+            let conditions = [];
+            let values = [];
+            let paramCount = 1;
 
-        if (filters.category && filters.category !== 'all') {
-            conditions.push(`category = $${paramCount}`);
-            values.push(filters.category);
-            paramCount++;
-        }
+            if (filters.category && filters.category !== 'all') {
+                conditions.push(`category = $${paramCount}`);
+                values.push(filters.category);
+                paramCount++;
+            }
 
-        if (filters.search) {
-            conditions.push(`(name ILIKE $${paramCount} OR short_desc ILIKE $${paramCount})`);
-            values.push(`%${filters.search}%`);
-            paramCount++;
-        }
+            if (filters.search) {
+                conditions.push(`(name ILIKE $${paramCount} OR short_desc ILIKE $${paramCount})`);
+                values.push(`%${filters.search}%`);
+                paramCount++;
+            }
 
-        if (filters.minRating) {
-            conditions.push(`rating >= $${paramCount}`);
-            values.push(filters.minRating);
-            paramCount++;
-        }
+            if (filters.minRating) {
+                conditions.push(`rating >= $${paramCount}`);
+                values.push(filters.minRating);
+                paramCount++;
+            }
 
-        let whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+            let whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-        let orderClause = 'ORDER BY id';
-        if (filters.sortBy === 'name') {
-            orderClause = 'ORDER BY name ASC';
-        } else if (filters.sortBy === 'nameDesc') {
-            orderClause = 'ORDER BY name DESC';
-        } else if (filters.sortBy === 'rating') {
-            orderClause = 'ORDER BY rating DESC NULLS LAST';
-        } else if (filters.sortBy === 'popular') {
-            orderClause = 'ORDER BY reviews_count DESC';
-        }
+            let orderClause = 'ORDER BY id';
+            if (filters.sortBy === 'name') {
+                orderClause = 'ORDER BY name ASC';
+            } else if (filters.sortBy === 'nameDesc') {
+                orderClause = 'ORDER BY name DESC';
+            } else if (filters.sortBy === 'rating') {
+                orderClause = 'ORDER BY rating DESC NULLS LAST';
+            } else if (filters.sortBy === 'popular') {
+                orderClause = 'ORDER BY reviews_count DESC';
+            }
 
-        const limit = filters.limit || 50;
-        const offset = filters.offset || 0;
-        values.push(limit, offset);
+            const limit = filters.limit || 50;
+            const offset = filters.offset || 0;
+            values.push(limit, offset);
 
-        const result = await query(
-            `SELECT id, name, category, short_desc, full_desc, address, metro, 
-                    hours, lat, lng, photo_url, rating, reviews_count, created_at
-             FROM places
-             ${whereClause}
-             ${orderClause}
-             LIMIT $${paramCount} OFFSET $${paramCount + 1}`,
-            values
-        );
+            const result = await query(
+                `SELECT id, name, category, short_desc, full_desc, address, metro, 
+                        hours, lat, lng, photo_url, rating, reviews_count, created_at
+                 FROM places
+                 ${whereClause}
+                 ${orderClause}
+                 LIMIT $${paramCount} OFFSET $${paramCount + 1}`,
+                values
+            );
 
-        return result.rows;
+            return result.rows;
+        }, () => fallback.findAll(filters));
+    }
+
+    static async countAll(filters = {}) {
+        return withPlacesFallback(async () => {
+            const result = await query('SELECT COUNT(*) FROM places');
+            return parseInt(result.rows[0].count, 10);
+        }, () => fallback.countAll());
     }
 
     static async findById(id) {
-        const result = await query(
-            `SELECT id, name, category, short_desc, full_desc, address, metro, 
-                    hours, lat, lng, photo_url, rating, reviews_count, created_at, updated_at
-             FROM places WHERE id = $1`,
-            [id]
-        );
-        return result.rows[0];
+        return withPlacesFallback(async () => {
+            const result = await query(
+                `SELECT id, name, category, short_desc, full_desc, address, metro, 
+                        hours, lat, lng, photo_url, rating, reviews_count, created_at, updated_at
+                 FROM places WHERE id = $1`,
+                [id]
+            );
+            return result.rows[0];
+        }, () => fallback.findById(id));
     }
 
     static async create(placeData) {
@@ -132,20 +144,22 @@ class Place {
     }
 
     static async getNearby(lat, lng, radius = 0.02) {
-        const result = await query(
-            `SELECT id, name, category, short_desc, address, metro, 
-                    photo_url, rating, lat, lng,
-                    ( 6371 * acos( cos( radians($1) ) * cos( radians(lat) ) * 
-                      cos( radians(lng) - radians($2) ) + sin( radians($1) ) * sin( radians(lat) ) ) ) 
-                    AS distance
-             FROM places
-             WHERE ( 6371 * acos( cos( radians($1) ) * cos( radians(lat) ) * 
-                    cos( radians(lng) - radians($2) ) + sin( radians($1) ) * sin( radians(lat) ) ) ) < $3
-             ORDER BY distance
-             LIMIT 20`,
-            [lat, lng, radius]
-        );
-        return result.rows;
+        return withPlacesFallback(async () => {
+            const result = await query(
+                `SELECT id, name, category, short_desc, address, metro, 
+                        photo_url, rating, lat, lng,
+                        ( 6371 * acos( cos( radians($1) ) * cos( radians(lat) ) * 
+                          cos( radians(lng) - radians($2) ) + sin( radians($1) ) * sin( radians(lat) ) ) ) 
+                        AS distance
+                 FROM places
+                 WHERE ( 6371 * acos( cos( radians($1) ) * cos( radians(lat) ) * 
+                        cos( radians(lng) - radians($2) ) + sin( radians($1) ) * sin( radians(lat) ) ) ) < $3
+                 ORDER BY distance
+                 LIMIT 20`,
+                [lat, lng, radius]
+            );
+            return result.rows;
+        }, () => fallback.getNearby(lat, lng, radius));
     }
 }
 

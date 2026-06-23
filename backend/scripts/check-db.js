@@ -40,7 +40,7 @@ async function main() {
         console.log('Target DB_NAME:', target, exists ? '(exists)' : '(NOT FOUND)');
     }
 
-    const poolClient = new Client(getClientConfig());
+    const poolClient = new Client(getClientConfig(process.env.DB_NAME));
     await poolClient.connect();
     const tables = await poolClient.query(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'places'"

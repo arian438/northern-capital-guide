@@ -21,9 +21,7 @@ exports.getPlaces = async (req, res) => {
         };
 
         const places = await Place.findAll(filters);
-        const total = await query(
-            'SELECT COUNT(*) FROM places'
-        );
+        const total = await Place.countAll();
 
         res.json({
             success: true,
@@ -31,7 +29,7 @@ exports.getPlaces = async (req, res) => {
             pagination: {
                 limit: filters.limit,
                 offset: filters.offset,
-                total: parseInt(total.rows[0].count)
+                total
             }
         });
     } catch (error) {

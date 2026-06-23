@@ -71,20 +71,26 @@ app.use('/api/favorites', require('./routes/favoriteRoutes'));
 
 // Health check
 app.get('/health', async (req, res) => {
+    const { pool } = require('./config/database');
+    const { fallback } = require('./utils/placesData');
+
     try {
-        const { pool } = require('./config/database');
         await pool.query('SELECT 1');
         res.json({
             status: 'ok',
             database: 'connected',
+            dataSource: 'database',
+            placesCount: await fallback.countAll(),
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        res.status(503).json({
-            status: 'error',
+        res.json({
+            status: 'ok',
             database: 'disconnected',
+            dataSource: 'static',
+            placesCount: fallback.countAll(),
             message: process.env.NODE_ENV === 'production'
-                ? 'База данных недоступна'
+                ? 'Работает на встроенных данных (без облачной БД)'
                 : error.message,
             timestamp: new Date().toISOString()
         });
