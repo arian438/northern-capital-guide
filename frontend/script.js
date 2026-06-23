@@ -36,7 +36,7 @@
     }
 
     function showLoadError(message) {
-        container.innerHTML = `<div class="no-results"><i class="fas fa-exclamation-triangle"></i><h3>Ошибка загрузки</h3><p>${escapeHtml(message)}</p><p>Убедитесь, что сервер запущен: <code>npm start</code> в папке backend</p></div>`;
+        container.innerHTML = `<div class="no-results"><i class="fas fa-exclamation-triangle"></i><h3>Ошибка загрузки</h3><p>${escapeHtml(message)}</p><p>Проверьте подключение к API и базе данных на сервере.</p></div>`;
         resultsCounterSpan.innerText = 'Найдено мест: 0';
     }
 

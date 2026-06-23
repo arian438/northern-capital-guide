@@ -2,7 +2,8 @@
 .DS_Store
 Thumbs.db
 
-node_modeles
+node_modules/
+backend/node_modules/
 
 # Файлы редакторов и IDE
 .vscode/

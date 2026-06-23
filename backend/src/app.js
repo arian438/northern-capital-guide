@@ -12,10 +12,29 @@ app.use(helmet({
     contentSecurityPolicy: false // Для разработки
 }));
 
-// CORS
-const frontendUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || 5000}`;
+// CORS — на Vercel фронтенд и API на одном домене; для превью и локальной разработки разрешаем доп. origins
+function isAllowedOrigin(origin) {
+    if (!origin) return true;
+
+    const allowed = [
+        process.env.FRONTEND_URL,
+        process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+        process.env.VERCEL_BRANCH_URL ? `https://${process.env.VERCEL_BRANCH_URL}` : null,
+        `http://localhost:${process.env.PORT || 5000}`,
+        'http://localhost:3000'
+    ].filter(Boolean);
+
+    return allowed.includes(origin) || origin.endsWith('.vercel.app');
+}
+
 app.use(cors({
-    origin: frontendUrl,
+    origin(origin, callback) {
+        if (isAllowedOrigin(origin)) {
+            callback(null, origin || true);
+        } else {
+            callback(null, false);
+        }
+    },
     credentials: true,
     optionsSuccessStatus: 200
 }));
@@ -51,12 +70,25 @@ app.use('/api/places', require('./routes/placeRoutes'));
 app.use('/api/favorites', require('./routes/favoriteRoutes'));
 
 // Health check
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime()
-    });
+app.get('/health', async (req, res) => {
+    try {
+        const { pool } = require('./config/database');
+        await pool.query('SELECT 1');
+        res.json({
+            status: 'ok',
+            database: 'connected',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(503).json({
+            status: 'error',
+            database: 'disconnected',
+            message: process.env.NODE_ENV === 'production'
+                ? 'База данных недоступна'
+                : error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 // 404
