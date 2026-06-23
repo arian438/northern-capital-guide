@@ -11,5 +11,20 @@
     "dev": "npm --prefix backend run dev",
     "db:check": "npm --prefix backend run db:check",
     "db:setup": "npm --prefix backend run db:setup"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.10.0",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.0.0",
+    "joi": "^17.10.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.11.3",
+    "uuid": "^9.0.1",
+    "winston": "^3.10.0"
   }
 }
